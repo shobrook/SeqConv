@@ -6,7 +6,7 @@
     <img src="assets/equation.png" width="47%" />
 </p>
 
-Where _&phi;<sub>r</sub>_ and _&phi;<sub>m</sub>_ are LSTMs (`torch.nn.LSTM()`), and _h<sub>&theta</sub>_ is a neural network. The last hidden state of each LSTM, _h<sub>n</sub>_, is used during updating.
+Where _&phi;<sub>r</sub>_ and _&phi;<sub>m</sub>_ are LSTMs (`torch.nn.LSTM()`), and _h<sub>Θ</sub>_ is a neural network. The last hidden state of each LSTM, _h<sub>n</sub>_, is used during updating.
 
 ## Installation
 
