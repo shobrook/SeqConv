@@ -1,47 +1,50 @@
-# lstm-gnn
+# lstm-conv
 
-`lstm-gnn` is a PyTorch implementation of a graph convolutional operator that uses long short-term memory (LSTM) network as a filter -- that is, LSTM is used to update node embeddings. This is useful for graph datasets where each node represents a time series or sequence of vectors.
+`lstm-conv` is a PyTorch implementation of a graph convolutional operator that uses long short-term memory (LSTM) network as a filter -- that is, LSTM is used to update node embeddings. This is useful for graph datasets where each node represents a time series or sequence of vectors.
 
 <p align="center">
     <img src="assets/equation.png" width="47%" />
 </p>
 
-Where _&phi;<sub>r</sub>_ and _&phi;<sub>m</sub>_ are LSTMs (`torch.nn.LSTM()`), and _h<sub>Θ</sub>_ is a neural network. The last hidden state of each LSTM, _h<sub>n</sub>_, is used during updating.
+Where _&phi;<sub>r</sub>_ and _&phi;<sub>m</sub>_ are LSTMs (`torch.nn.LSTM()`), and _h<sub>Θ</sub>_ is a neural network. The outputs of each LSTM are the last hidden state, _h<sub>n</sub>_, rather than all the output features.
 
 ## Installation
 
-`lstm-gnn` can be installed with `pip`:
+This module can be installed with `pip`:
 
 ```bash
-$ pip install lstm-gnn
+$ pip install lstm-conv
 ```
 
 ## Usage
 
-This module is built on PyTorch Geometric, and inherits from the `MessagePassing` class. It takes the following parameters:
+`LSTMConv` is built on PyTorch Geometric and derives from the `MessagePassing` module. It expects an input graph where each node's has a sequence of vectors associated with it. `LSTMConv`, similarly to `NNConv`, also incorporates any available edge features when collecting messages from a node's neighbors.
 
-- **in_channels** (_int_): 
-- **out_channels** (_int_):
-- **edge_nn** (_torch.nn.Module_):
-- **aggr** (_string_):
-- **root_lstm** (_boolean_):
-- **bias** (_boolean_):
+**Parameters:**
 
-Here's an example:
+- **in_channels** (_int_): Number of channels in the input node sequence (e.g. if each node has a sequence of vectors of size n associated with it, then in_channels = n)
+- **out_channels** (_int_): Number of channels in the output node embedding
+- **edge_nn** (_torch.nn.Module_): A neural network _h<sub>Θ</sub>_ that maps edge features, `edge_attr`, of shape `[-1, num_edge_features]` to shape `[-1, out_channels]`
+- **aggr** (_string_, _optional_): The message aggregation scheme to use ("add", "mean", "max")
+- **root_lstm** (_bool_, _optional_): If set to `False`, the layer will not add the LSTM-transformed root node features to the output
+- **bias** (_bool_, _optional_): If set to `False`, the layer will not learn an additive bias
+- **\*\*kwargs** (_optional_): Additional arguments for `torch.nn.LSTM`
+
+**Example Usage:**
 
 ```python
 import torch
 from lstm_gnn import LSTMConv
 
 # Convolutional layer
-conv = LSTMConv(
+conv_layer = LSTMConv(
     in_channels=1,
     out_channels=5,
     edge_nn=torch.nn.Linear(2, 5)
 )
 
 # Your input graph (see: https://pytorch-geometric.readthedocs.io/en/latest/notes/introduction.html#data-handling-of-graphs)
-x = torch.randn((3, 12, 1), dtype=torch.float) # Shape is [num_nodes, seq_len, num_features]
+x = torch.randn((3, 12, 1), dtype=torch.float) # Shape is [num_nodes, seq_len, in_channels]
 edge_index = torch.tensor([
     [0, 1, 1, 2],
     [1, 0, 2, 1]
@@ -49,5 +52,7 @@ edge_index = torch.tensor([
 edge_attr = torch.randn((4, 2), dtype=torch.long)
 
 # Your output graph
-x = conv(x, edge_index, edge_attr) # Shape is now [3, 5]
+x = conv_layer(x, edge_index, edge_attr) # Shape is now [3, 5]
 ```
+
+To-Do: Allow stacking of `LSTMConv` layers.
