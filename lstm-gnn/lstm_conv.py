@@ -8,58 +8,63 @@ import torch
 import torch.nn as nn
 from torch_geometric.nn.inits import reset, zeros
 from torch_geometric.nn.conv import MessagePassing
-from torch_geometric.typing import Adj, OptTensor, Size
 
+# TODO: Add docstrings
 
 class LSTM(nn.Module):
-    def __init__(self, in_channels: int, out_channels: int, **kwargs):
+    def __init__(self, in_channels, out_channels, **kwargs):
+        super(LSTM, self).__init__()
+
         self.lstm = nn.LSTM(in_channels, out_channels, batch_first=True, **kwargs)
-    
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+
+    def forward(self, x):
         x, (h_n, c_n) = self.lstm(x)
         return h_n
 
 
-# TODO: Let edge_nn be lambda x: x by default, and handle edge_attr = None
 # TODO: Allow LSTMConv layers to be stacked
 class LSTMConv(MessagePassing):
-    def __init__(self, in_channels: int, out_channels: int, edge_nn: nn.Module,
-                 aggr: str = "add", root_lstm: bool = True, bias: bool = True, **kwargs):
-    """
-    TODO: Write docstring
-    
-    Parameters
-    ----------
-    in_channels : int
-        ...
-    out_channels : int
-        ...
-    edge_nn : nn.Module
-        ...
-    aggr : string
-        ...
-    root_lstm : boolean
-        ...
-    bias : boolean
-        ...
-    """
-    super(LSTMConv, self).__init__(aggr=aggr)
-    
-    self.in_channels, self.out_channels = in_channels, out_channels
-    self.edge_nn, self.aggr = edge_nn, aggr
+    def __init__(self, in_channels, out_channels, edge_nn, aggr="add",
+                 root_lstm=True, bias=True, **kwargs):
+        """
+        TODO: Write docstring
 
-    self.message_lstm = LSTM(in_channels, out_channels, **kwargs)
-    if root_weight:
-        self.root = LSTM(in_channels, out_channels, **kwargs)
-    else:
-        self.register_parameter("root", None)
-    
-    if bias:
-        self.bias = nn.Parameter(torch.Tensor(out_channels))
-    else:
-        self.register_parameter("bias", None)
-    
-    self.reset_parameters()
+        Parameters
+        ----------
+        in_channels : int
+            Number of channels in the input node sequence (e.g. if each node has
+            a sequence of vectors of size n associated with it, then
+            in_channels = n)
+        out_channels : int
+            Number of channels in the output node embedding
+        edge_nn : nn.Module
+            A neural network h_Θ that maps edge features, edge_attr, of shape
+            [-1, num_edge_features] to shape [-1, out_channels]
+        aggr : string
+            The message aggregation scheme to use ("add", "mean", "max")
+        root_lstm : bool
+            If set to False, the layer will not add the LSTM-transformed root
+            node features to the output
+        bias : bool
+            If set to False, the layer will not learn an additive bias
+        """
+        super(LSTMConv, self).__init__(aggr=aggr)
+
+        self.in_channels, self.out_channels = in_channels, out_channels
+        self.edge_nn, self.aggr = edge_nn, aggr
+
+        self.message_lstm = LSTM(in_channels, out_channels, **kwargs)
+        if root_lstm:
+            self.root = LSTM(in_channels, out_channels, **kwargs)
+        else:
+            self.register_parameter("root", None)
+
+        if bias:
+            self.bias = nn.Parameter(torch.Tensor(out_channels))
+        else:
+            self.register_parameter("bias", None)
+
+        self.reset_parameters()
 
     def reset_parameters(self):
         reset(self.edge_nn)
@@ -67,48 +72,32 @@ class LSTMConv(MessagePassing):
         if self.root:
             reset(self.root)
         zeros(self.bias)
-    
-    def forward(self, x: torch.Tensor, edge_index: Adj, edge_attr: OptTensor = None, 
-                size: Size = None) -> torch.Tensor:
+
+    def forward(self, x, edge_index, edge_attr, size=None):
         edge_attr = edge_attr.unsqueeze(-1) if edge_attr.dim() == 1 else edge_attr
         size = (x.size(0), x.size(0))
         x = x.unsqueeze(-1) if x.dim() == 1 else x
 
         return self.propagate(edge_index, size=size, x=x, edge_attr=edge_attr)
- 
-    def message(self, x_j: torch.Tensor, edge_attr: OptTensor):
+
+    def message(self, x_j, edge_attr):
         edge_weight = self.edge_nn(edge_attr)
-        edge_weight = weight.view(-1, self.in_channels, self.out_channels)
-        
-        x_j_prime = self.message_lstm(x_j.view(1, *x_j.shape))
-        return torch.matmul(x_j_prime, weight).squeeze(1)
- 
-    def update(self, aggr_out: torch.Tensor, x: torch.Tensor):
-        if self.bias:
+        x_j_prime = self.message_lstm(x_j).squeeze()
+
+        return edge_weight * x_j_prime
+
+    def update(self, aggr_out, x):
+        if self.bias is not None:
             aggr_out += self.bias
-        
-        return self.root_conv(x.view(1, *x_j.shape)) + aggr_out
-    
+        if self.root is not None:
+            x = self.root(x)
+
+        x_i_prime = x + aggr_out
+        return x_i_prime.squeeze()
+
     def __repr__(self):
-        return f"{self.__class__.__name__}({self.in_channels}, {self.out_channels})"
-
-
-# TEMP: For testing purposes only
-if __name__ == "__main__":
-    from torch_geometric.data import Data
-
-    x = torch.tensor([
-        [[-1], [12], [7], [3]]
-        [[4], [6], [1], [2]],
-        [[0], [1], [1], [5]]
-    ], dtype=torch.float)
-    edge_index = torch.tensor([
-        [0, 1, 1, 2],
-        [1, 0, 2, 1]
-    ], dtype=torch.long)
-    edge_attr = torch.tensor([[0.35], [0.75], [0.12], [0.98]])
-
-    data = Data(x=x, edge_index=edge_index, edge_attr=edge_attr)
-    conv = LSTMConv(in_channels=1, out_channels=10, edge_nn=nn.Linear(1, 10))
-    output = conv(data)
-    print(output)
+        return "".join([
+            f"{self.__class__.__name__}",
+            f"({self.in_channels}, ",
+            f"{self.out_channels})"
+        ])
