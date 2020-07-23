@@ -13,14 +13,14 @@ with open("README.md", encoding="utf-8") as file:
     readme = file.read()
 
 setup(
-    name="lstm-conv",
+    name="seq-conv",
     description="Graph convolutional operator that uses a LSTM as a filter",
     long_description=readme,
     long_description_content_type="text/markdown",
     version="v1.0.0",
-    packages=["lstm-conv"],
+    packages=["seq-conv"],
     python_requires=">=3",
-    url="https://github.com/shobrook/lstm-conv",
+    url="https://github.com/shobrook/seq-conv",
     author="shobrook",
     author_email="shobrookj@gmail.com",
     # classifiers=[],

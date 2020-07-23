@@ -23,7 +23,7 @@ class LSTM(nn.Module):
 
 
 # TODO: Allow LSTMConv layers to be stacked
-class LSTMConv(MessagePassing):
+class SeqConv(MessagePassing):
     def __init__(self, in_channels, out_channels, edge_nn, aggr="add",
                  root_lstm=True, bias=True, **kwargs):
         """
@@ -48,7 +48,7 @@ class LSTMConv(MessagePassing):
         bias : bool
             If set to False, the layer will not learn an additive bias
         """
-        super(LSTMConv, self).__init__(aggr=aggr)
+        super(SeqConv, self).__init__(aggr=aggr)
 
         self.in_channels, self.out_channels = in_channels, out_channels
         self.edge_nn, self.aggr = edge_nn, aggr

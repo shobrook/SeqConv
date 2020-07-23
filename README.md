@@ -1,24 +1,24 @@
-# lstm-conv
+# SeqConv
 
-`lstm-conv` is a PyTorch implementation of a graph convolutional operator that uses long short-term memory (LSTM) network as a filter -- that is, LSTM is used to update node embeddings. This is useful for graph datasets where each node represents a time series or sequence of vectors.
+`SeqConv` is a PyTorch implementation of a graph convolutional operator that uses long short-term memory (LSTM) network as a filter -- that is, LSTM is used to update node embeddings. This is useful for graph datasets where each node represents a sequence of vectors, such as a time series.
 
 <p align="center">
     <img src="assets/equation.png" width="47%" />
 </p>
 
-Where _&phi;<sub>r</sub>_ and _&phi;<sub>m</sub>_ are LSTMs (`torch.nn.LSTM()`), and _h<sub>Θ</sub>_ is a neural network. The outputs of each LSTM are the last hidden state, _h<sub>n</sub>_, rather than all the output features.
+Where _&phi;<sub>r</sub>_ and _&phi;<sub>m</sub>_ are LSTMs ([`torch.nn.LSTM`](https://pytorch.org/docs/stable/nn.html#torch.nn.LSTM)), and _h<sub>Θ</sub>_ is a neural network. The outputs of each LSTM are the last hidden state, _h<sub>n</sub>_, rather than all the output features.
 
 ## Installation
 
 This module can be installed with `pip`:
 
 ```bash
-$ pip install lstm-conv
+$ pip install seq-conv
 ```
 
 ## Usage
 
-`LSTMConv` is built on PyTorch Geometric and derives from the `MessagePassing` module. It expects an input graph where each node's has a sequence of vectors associated with it. `LSTMConv`, similarly to `NNConv`, also incorporates any available edge features when collecting messages from a node's neighbors.
+`SeqConv` is built on PyTorch Geometric and derives from the [`MessagePassing`](https://pytorch-geometric.readthedocs.io/en/latest/modules/nn.html#torch_geometric.nn.conv.message_passing.MessagePassing) module. It expects an input graph where each node's has a sequence of vectors associated with it. `SeqConv`, similarly to [`NNConv`](https://pytorch-geometric.readthedocs.io/en/latest/modules/nn.html#torch_geometric.nn.conv.NNConv), also incorporates any available edge features when collecting messages from a node's neighbors.
 
 **Parameters:**
 
@@ -34,10 +34,10 @@ $ pip install lstm-conv
 
 ```python
 import torch
-from lstm_gnn import LSTMConv
+from seq_conv import SeqConv
 
 # Convolutional layer
-conv_layer = LSTMConv(
+conv_layer = SeqConv(
     in_channels=1,
     out_channels=5,
     edge_nn=torch.nn.Linear(2, 5)
@@ -55,4 +55,4 @@ edge_attr = torch.randn((4, 2), dtype=torch.long)
 x = conv_layer(x, edge_index, edge_attr) # Shape is now [3, 5]
 ```
 
-To-Do: Allow stacking of `LSTMConv` layers.
+To-Do: Allow stacking of `SeqConv` layers.
