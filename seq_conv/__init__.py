@@ -1,1 +1,1 @@
-from seq_conv import SeqConv
+from .seq_conv import SeqConv
