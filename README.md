@@ -13,7 +13,7 @@ Where _&phi;<sub>r</sub>_ and _&phi;<sub>m</sub>_ are LSTMs ([`torch.nn.LSTM`](h
 This module can be installed with `pip`:
 
 ```bash
-$ pip install seq-conv
+$ pip install seq_conv
 ```
 
 ## Usage
