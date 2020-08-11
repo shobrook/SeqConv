@@ -1,6 +1,6 @@
 # SeqConv
 
-`SeqConv` is a PyTorch implementation of a graph convolutional operator that uses long short-term memory (LSTM) to update node embeddings. This is useful for graph datasets where each node represents a sequence, such as a time series.
+`SeqConv` is a PyTorch implementation of a graph convolutional operator that uses long short-term memory (LSTM) to update node embeddings. This is useful for graph datasets where each node represents a sequence, such as a time series. Node embeddings are updated like so:
 
 <p align="center">
     <img src="assets/equation.png" width="47%" />
