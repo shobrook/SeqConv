@@ -17,7 +17,7 @@ setup(
     description="Graph convolutional operator that uses a LSTM as a filter",
     long_description=readme,
     long_description_content_type="text/markdown",
-    version="v1.0.1",
+    version="v1.0.2",
     packages=["seq_conv"],
     python_requires=">=3",
     url="https://github.com/shobrook/SeqConv",
