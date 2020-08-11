@@ -15,7 +15,12 @@ class LSTM(nn.Module):
     def __init__(self, in_channels, out_channels, **kwargs):
         super(LSTM, self).__init__()
 
-        self.lstm = nn.LSTM(in_channels, out_channels, batch_first=True, **kwargs)
+        self.lstm = nn.LSTM(
+            input_size=in_channels,
+            hidden_size=out_channels,
+            batch_first=True,
+            **kwargs
+        )
 
     def forward(self, x):
         x, (h_n, c_n) = self.lstm(x)
@@ -53,9 +58,9 @@ class SeqConv(MessagePassing):
         self.in_channels, self.out_channels = in_channels, out_channels
         self.edge_nn, self.aggr = edge_nn, aggr
 
-        self.message_lstm = LSTM(in_channels, out_channels, **kwargs)
+        self.message_lstm = LSTM(in_channels, out_channels, **kwargs) # phi_m
         if root_lstm:
-            self.root = LSTM(in_channels, out_channels, **kwargs)
+            self.root = LSTM(in_channels, out_channels, **kwargs) # phi_r
         else:
             self.register_parameter("root", None)
 
@@ -74,9 +79,11 @@ class SeqConv(MessagePassing):
         zeros(self.bias)
 
     def forward(self, x, edge_index, edge_attr, size=None):
-        edge_attr = edge_attr.unsqueeze(-1) if edge_attr.dim() == 1 else edge_attr
+        if x.dim() == 1:
+            x = x.unsqueeze(-1)
+        if edge_attr.dim() == 1:
+            edge_attr = edge_attr.unsqueeze(-1)
         size = (x.size(0), x.size(0))
-        x = x.unsqueeze(-1) if x.dim() == 1 else x
 
         return self.propagate(edge_index, size=size, x=x, edge_attr=edge_attr)
 
@@ -97,7 +104,7 @@ class SeqConv(MessagePassing):
 
     def __repr__(self):
         return "".join([
-            f"{self.__class__.__name__}",
+            self.__class__.__name__,
             f"({self.in_channels}, ",
             f"{self.out_channels})"
         ])

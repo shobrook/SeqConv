@@ -1,6 +1,6 @@
 # SeqConv
 
-`SeqConv` is a PyTorch implementation of a graph convolutional operator that uses long short-term memory (LSTM) to update node embeddings. This is useful for graph datasets where each node represents a sequence of vectors, such as a time series.
+`SeqConv` is a PyTorch implementation of a graph convolutional operator that uses long short-term memory (LSTM) to update node embeddings. This is useful for graph datasets where each node represents a sequence, such as a time series.
 
 <p align="center">
     <img src="assets/equation.png" width="47%" />
@@ -18,7 +18,7 @@ $ pip install seq_conv
 
 ## Usage
 
-`SeqConv` is built on PyTorch Geometric and derives from the [`MessagePassing`](https://pytorch-geometric.readthedocs.io/en/latest/modules/nn.html#torch_geometric.nn.conv.message_passing.MessagePassing) module. It expects an input graph where each node's has a sequence of vectors associated with it. `SeqConv`, similarly to [`NNConv`](https://pytorch-geometric.readthedocs.io/en/latest/modules/nn.html#torch_geometric.nn.conv.NNConv), also incorporates any available edge features when collecting messages from a node's neighbors.
+`SeqConv` is built on PyTorch Geometric and derives from the [`MessagePassing`](https://pytorch-geometric.readthedocs.io/en/latest/modules/nn.html#torch_geometric.nn.conv.message_passing.MessagePassing) class. It expects an input graph where each node's "features" is a sequence of vectors. `SeqConv`, similarly to [`NNConv`](https://pytorch-geometric.readthedocs.io/en/latest/modules/nn.html#torch_geometric.nn.conv.NNConv), also incorporates any available edge features when collecting messages from a node's neighbors.
 
 **Parameters:**
 
@@ -55,4 +55,4 @@ edge_attr = torch.randn((4, 2), dtype=torch.long)
 x = conv_layer(x, edge_index, edge_attr) # Shape is now [3, 5]
 ```
 
-To-Do: Allow stacking of `SeqConv` layers.
+**To-Do:** Allow stacking of `SeqConv` layers.
